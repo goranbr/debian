@@ -2,6 +2,7 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/goranbr/os-debian?color=green)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/goranbr/os-debian?color=green)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/goranbr/os-debian)
+![GitHub All Releases](https://img.shields.io/github/downloads/goranbr/os-debian/total)
 
 Debian related scripts, cheatsheets and whatnot.
 
