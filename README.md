@@ -1,6 +1,6 @@
 # os-debian
 ![GitHub contributors](https://img.shields.io/github/contributors/goranbr/os-debian?color=green)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/w/goranbr/os-debian)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/goranbr/os-debian)
 ![GitHub last commit](https://img.shields.io/github/last-commit/goranbr/os-debian)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/goranbr/os-debian)
 ![GitHub language count](https://img.shields.io/github/languages/count/goranbr/os-debian)
