@@ -1,4 +1,5 @@
 # os-debian
+https://img.shields.io/github/contributors/goranbr/os-debian
 Debian related scripts, cheatsheets and whatnot.
 
 ## Distribution upgrades
