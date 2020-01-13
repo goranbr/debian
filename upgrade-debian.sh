@@ -3,7 +3,7 @@
 function ask {
     while true; do
         echo
-        read -p "Fortsätt? (Y/n): " yn
+        read -r -p "Fortsätt? (Y/n): " yn
         case $yn in
             [Yy]* ) echo; return 1;;
             [Nn]* ) exit;;
@@ -24,7 +24,7 @@ function headline() {
 databases="mariadb postgresql.service mongod.service mysql"
 for i in $databases
 do
-    if $( systemctl status $i > /dev/null 2>&1 )
+    if $(systemctl status $i > /dev/null 2>&1)
     then
         echo ERROR: Det finns en eller fler databaser som kör i maskinen.. ta BACKUP 1>&2
 	echo $i
@@ -48,8 +48,8 @@ ask
 
 headline "Se till att det finns utrymme i hårddisken:"
 #apt-get -o APT::Get::Trivial-Only=true dist-upgrade | awk '/After this operation/'
-checkDisk=`df --out=target,avail / | awk ' NR==2 {print $2}'`
-checkDiskH=`df -h --out=target,avail / | awk ' NR==2 {print $2}'`
+checkDisk=$(df --out=target,avail / | awk ' NR==2 {print $2}')
+checkDiskH=$(df -h --out=target,avail / | awk ' NR==2 {print $2}')
 if [ "$checkDisk" -gt "2000000" ];then
     echo "JA=$checkDiskH"
 else
@@ -59,7 +59,7 @@ fi
 ask
 
 headline "Kolla vilken puppet server den går mot:"
-newPuppet=$(cat /etc/puppetlabs/puppet/puppet.conf | grep server | awk '{print $3}')
+newPuppet=$(grep server /etc/puppetlabs/puppet/puppet.conf | awk '{print $3}')
 oldPuppet="prod-int-puppet1.skolverket.se"
 if [ $newPuppet == "prod-int-pe1.skolverket.se" ]; then
     echo "Du är på rätt puppet server ($newPuppet)!"
@@ -75,7 +75,7 @@ ask
 
 headline "Kör puppet med --noop: "
 echo
-read -p "(Y/n): " 
+read -r -p "(Y/n): " 
 if [[ ! $REPLY =~ ^[Yy]$ ]]; then
     echo "continue"
 else
@@ -86,7 +86,7 @@ echo
 echo "################################################"
 echo "# Kör en full puppet run: "
 echo "################################################"
-read -p "(Y/n): "
+read -r -p "(Y/n): "
 if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     puppet agent -t
     clear
@@ -110,7 +110,7 @@ for i in $services
 do
     if $( systemctl status $i > /dev/null 2>&1 )
     then
-        read -p "Vill du stänga av $i? "
+        read -r -p "Vill du stänga av $i? "
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
             echo "Avslutar skript... Tjänster MÅSTE stängas av innan en uppgradering"
@@ -148,7 +148,7 @@ echo
 echo "################################################"
 echo "# Kör en full puppet run: "
 echo "################################################"
-read -p "(Y/n): "
+read -r -p "(Y/n): "
 if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     puppet agent -t
 fi
@@ -172,8 +172,7 @@ if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     apt-get purge $(dpkg -l | awk '/^rc/ { print $2 }')
 fi
 
-
-headline "Se så att avahi är disabled"
+headline "Se till att avahi är disabled"
 systemctl list-unit-files | grep avahi
 
 ######################################
@@ -182,6 +181,6 @@ systemctl list-unit-files | grep avahi
 
 #reboot
 headline "Starta om maskinen"
-echo "OBS OBS OBS!! Efter att man startat om maskinen så MÅSTE man kolla diverse loggar och verkligen se till att applikationen fungerar rätt"
+echo "OBS!! Efter att man startat om maskinen MÅSTE man kolla loggar och se till att applikationen fungerar rätt"
 ask
 reboot
