@@ -7,10 +7,10 @@ Debian related scripts, cheatsheets and whatnot.
 ## Renaming scripts
 ### mx
 - mx - rename files and directories with a sed-like substitute syntax
-- Syntax: `mx "pattern-string/replace-string" FILEPATTERN`
-- Example: `$ mx "stupid/unwise" myfile`
+- **Syntax**: `mx "pattern-string/replace-string" [FILE]...`
+- **Example**: `$ mx "stupid/unwise" myfile`
 
 ### ix
 - ix - rename files with a basename and an index number
-- **Syntax**: `ix [-w width] [-d delta] [-s start] [-n basename] FILEPATTERN`
+- **Syntax**: `ix [-w width] [-d delta] [-s start] [-n basename] [FILE]...`
 - **Example**: `ix -s10 -d5 -n docker-course *.txt`
