@@ -1,119 +1,149 @@
 #!/bin/bash
 
+#-------------------------------------------------------------------------------------------------
+# Prompt for yes or no
+# Positional parameters: 
+#   1) question - if not specified the phrase "Continue?" is used.
+#-------------------------------------------------------------------------------------------------
+
 function ask {
+
+    question=${1:-"Continue?"}
     while true; do
         echo
-        read -r -p "Fortsätt? (Y/n): " yn
+        read -r -p "${question} (y/n): " yn
         case $yn in
-            [Yy]* ) echo; return 1;;
+            [Yy]* ) echo; return 0;;
             [Nn]* ) exit;;
-            * ) echo "Svara Y eller n";;
+            * ) echo "Please, answer y or n!";;
         esac
     done
 }
 
-function headline() {
-    clear
+#-------------------------------------------------------------------------------------------------
+# Print a headline for one step of the script procedure
+#-------------------------------------------------------------------------------------------------
+
+function headline {
     echo
-    echo "################################################"
+    echo "----------------------------------------------------------------------------------------"
     echo "# $1"
-    echo "################################################"
+    echo "----------------------------------------------------------------------------------------"
+    echo
 }
 
-# Kolla ifall det finns en datorbas..
-databases="mariadb postgresql.service mongod.service mysql"
+#-------------------------------------------------------------------------------------------------
+# Before distribution upgrade: Check for running database services
+#-------------------------------------------------------------------------------------------------
+
+headline "Checking for running databases..."
+databases="mariadb postgresql mongod mysql"
 for i in $databases
 do
     if $(systemctl status $i > /dev/null 2>&1)
     then
-        echo ERROR: Det finns en eller fler databaser som kör i maskinen.. ta BACKUP 1>&2
-	echo $i
+        echo "ERROR: There are one or more databases running on this machine. Take a BACKUP!"
+	echo "$i"
         exit 1
     fi
 done
 
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Operating System Backup
+#-------------------------------------------------------------------------------------------------
 
-######################################
-# Vad gör vi innan en uppgradering?
-######################################
-headline "Har du tagit en backup? OTROLIGT VIKTIGT att göra!"
-ask
+headline "System backup"
+ask "Have you taken a system backup?"
 
-######################################
-# Är den satt på shecudles downtime på OP5?
-######################################
-headline "Har du tagit ner den ifrån OP5***??"
-ask
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Announce downtime in OP5
+#-------------------------------------------------------------------------------------------------
 
+headline "OP5 Monitoring"
+ask "Have you scheduled downtime in OP5?"
 
-headline "Se till att det finns utrymme i hårddisken:"
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Sufficient free storage left 
+#-------------------------------------------------------------------------------------------------
+
+headline "Ensuring there is enough free storage left on this machine:"
 #apt-get -o APT::Get::Trivial-Only=true dist-upgrade | awk '/After this operation/'
-checkDisk=$(df --out=target,avail / | awk ' NR==2 {print $2}')
+checkDisk=$(df --out=target,avail /     | awk ' NR==2 {print $2}')
 checkDiskH=$(df -h --out=target,avail / | awk ' NR==2 {print $2}')
 if [ "$checkDisk" -gt "2000000" ];then
-    echo "JA=$checkDiskH"
+    echo "Yes, $checkDiskH"
 else
-    echo "OPS: MINDRE ÄN 2GB KVAR PÅ HÅRDDISKEN"
+    echo "No, less than 2GB free storage left."
     exit 1
 fi
 ask
 
-headline "Kolla vilken puppet server den går mot:"
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Check which Pupper server it is a member of
+#-------------------------------------------------------------------------------------------------
+
+# TODO: This should be configurable as an environment variable
+
+headline "Check which Puppet server this machine is a member of:"
 newPuppet=$(grep server /etc/puppetlabs/puppet/puppet.conf | awk '{print $3}')
 oldPuppet="prod-int-puppet1.skolverket.se"
-if [ $newPuppet == "prod-int-pe1.skolverket.se" ]; then
-    echo "Du är på rätt puppet server ($newPuppet)!"
+
+# TODO: Server name should be parameterized
+if [ $newPuppet == "prod-int-pe1.skolverket.se" ]
+then
+    echo "You are on the right puppet server ($newPuppet)!"
 else
-    echo "Gammal puppet server ($oldPuppet): <scriptet avslutas>"
+    echo "You are on the old puppet server ($oldPuppet). Aborting..."
     exit 1
 fi
 ask
 
-headline "Kolla ifall packet är satta i Hold:"
-dpkg --get-selections "*" > ~/curr-pkgs.txt
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Check if packets are put on hold
+#-------------------------------------------------------------------------------------------------
+
+headline "Check if packets are put on hold:"
+dpkg --get-selections "*" | tee ~/curr-pkgs.txt
 ask
 
-headline "Kör puppet med --noop: "
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Run a puppet Dryrun?
+#-------------------------------------------------------------------------------------------------
+
+headline "Puppet Dry-run"
 echo
-read -r -p "(Y/n): " 
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "continue"
-else
+if ask "Run: puppet dry-run?"
     puppet agent -t --noop
 fi
-
 echo
-echo "################################################"
-echo "# Kör en full puppet run: "
-echo "################################################"
-read -r -p "(Y/n): "
-if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Run a full puppet run?
+#-------------------------------------------------------------------------------------------------
+
+headline "Full Puppet run"
+if ask "Run: a full puppet run?"
     puppet agent -t
-    clear
 fi
+echo
 
-headline "Uppdatera paketen innan man kör självaste uppgraderingen till Debian9:"
-ask
-apt-get update
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Check running services that should not be running
+#-------------------------------------------------------------------------------------------------
 
-headline "Kör en apt-get upgrade:"
-ask
-apt-get upgrade
+# TODO: This step does not allow for services not existing/running on a particular server
 
-headline "Kör en apt-get dist-upgrade:"
-ask
-apt-get dist-upgrade
+headline "Shut down services that should not be running during upgrade:"
+services="auth-entrust jenkins puppet pxp-agent mcollective mariadb postgresql mongod mysql solr ci session-c1.scope kibana apache apache2 nginx unicorn prometheus http tomcat susanavet2 jboss gitlab-runsvdir.service slapd exim4"
 
-headline "Lista och stäng av möjliga tjänster som kan vara igång:"
-services="auth-entrust jenkins puppet pxp-agent mcollective mariadb postgresql.service mongod mysql solr ci session-c1.scope kibana apache apache2 nginx unicorn prometheus http tomcat susanavet2 jboss gitlab-runsvdir.service slapd exim4"
 for i in $services
 do
     if $( systemctl status $i > /dev/null 2>&1 )
     then
-        read -r -p "Vill du stänga av $i? "
+        read -r -p "Shut down $i? "
         echo
         if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Avslutar skript... Tjänster MÅSTE stängas av innan en uppgradering"
+            echo "Aborting script. All services has to be shut down before upgrade."
             exit 1
         else
             systemctl stop $i
@@ -121,66 +151,99 @@ do
     fi
 done
 
-headline "Vi behöver andra på repositories innan uppgraderingen:"
-ask
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Change the APT repositories
+#-------------------------------------------------------------------------------------------------
+
+# TODO: Distro versions from/to should be parameterized
+
+headline "Changing the repositories"
+ask "Change the repositories for distribution upgrade?"
 sed -i 's/jessie/stretch/g' /etc/apt/sources.list.d/*
 
-headline "UPPGRADERINGEN"
-ask
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Update APT package index
+#-------------------------------------------------------------------------------------------------
+
+headline "Update APT package index"
+ask "Run: apt-get update?"
 apt-get update
 
-headline "apt-get upgrade:"
-ask
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Upgrade APT packages
+#-------------------------------------------------------------------------------------------------
+
+headline "Upgrade APT packages (current distribution)"
+ask "Run: apt-get upgrade?"
 apt-get upgrade
 
-headline "apt-get dist-upgrade:"
-ask
+#-------------------------------------------------------------------------------------------------
+# BEFORE distribution upgrade: Run the full dist upgrade 
+#-------------------------------------------------------------------------------------------------
+
+headline "Upgrade to another distribution"
+ask "Run: apt-get dist-upgrade?"
 apt-get dist-upgrade
 
-######################################
-# Vad gör vi efter uppgraderingen?:
-######################################
-headline "Kör apt-get autoremove:"
-ask
+#-------------------------------------------------------------------------------------------------
+# AFTER distribution upgrade: Autoremove unneccessary packages
+#-------------------------------------------------------------------------------------------------
+
+headline "Autoremoval of redundant packages" 
+ask "Run: apt-get autoremove?"
 sudo apt-get autoremove
 
-echo
-echo "################################################"
-echo "# Kör en full puppet run: "
-echo "################################################"
-read -r -p "(Y/n): "
-if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+#-------------------------------------------------------------------------------------------------
+# AFTER distribution upgrade: Run a full puppet run
+#-------------------------------------------------------------------------------------------------
+
+headline "Full Puppet run"
+if ask "Run a full puppet run?"
     puppet agent -t
 fi
 
-headline "Kolla status på eventuella paket som inte har installerats rätt:"
+#-------------------------------------------------------------------------------------------------
+# AFTER distribution upgrade: Check status of packages that have not succeeded
+#-------------------------------------------------------------------------------------------------
+
+headline "Check status of packages that have not succeeded"
 dpkg --audit
 ask
 
-headline "Kolla ifall det finns en linux-image metapackage:"
+#-------------------------------------------------------------------------------------------------
+# AFTER distribution upgrade: Check for existence of a linux-image metapackage
+#-------------------------------------------------------------------------------------------------
+
+headline "Check for existence of a linux-image metapackage:"
 dpkg -l "linux-image*" | grep ^ii | grep -i meta
 ask
 
-headline "Vi listar paker som fortfarande har configurations filer kvar efter bottragningen (autoremove commandot):"
+#-------------------------------------------------------------------------------------------------
+# AFTER distribution upgrade: Check for config files left after autoremove operation
+#-------------------------------------------------------------------------------------------------
+
+headline "List packages that retain config files after autoremove command:"
 dpkg -l | awk '/^rc/ { print $2 }'
 ask
 
-headline "Vill du ta bort dessa konfigurations filer? (Y/n): "
 echo
-read -p "(Y/n): "
-if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+if ask "Remove these config files?"
     apt-get purge $(dpkg -l | awk '/^rc/ { print $2 }')
 fi
 
-headline "Se till att avahi är disabled"
+#-------------------------------------------------------------------------------------------------
+# AFTER distribution upgrade: Check that avahi service is disabled
+#-------------------------------------------------------------------------------------------------
+
+headline "Check if avahi service is disabled (it should not be)"
 systemctl list-unit-files | grep avahi
 
-######################################
-# Done: 
-######################################
+#-------------------------------------------------------------------------------------------------
+# AFTER distribution upgrade: Reboot the machine
+#-------------------------------------------------------------------------------------------------
 
-#reboot
-headline "Starta om maskinen"
-echo "OBS!! Efter att man startat om maskinen MÅSTE man kolla loggar och se till att applikationen fungerar rätt"
-ask
-reboot
+headline "System reboot"
+echo "IMPORTANT!! After restarting the machine check logs to ensure all services are up and running."
+if ask "Reboot the machine?"
+    reboot
+fi
