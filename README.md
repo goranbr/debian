@@ -12,5 +12,5 @@ Debian related scripts, cheatsheets and whatnot.
 
 ### ix
 - ix - rename files with a basename and an index number
-- Syntax: `ix [-w width] [-d delta] [-s start] [-n basename] FILEPATTERN`
-- Example: `ix -s10 -d5 -n docker-course *.txt`
+- **Syntax**: `ix [-w width] [-d delta] [-s start] [-n basename] FILEPATTERN`
+- **Example**: `ix -s10 -d5 -n docker-course *.txt`
