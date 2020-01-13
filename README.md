@@ -5,6 +5,7 @@
 ![GitHub All Releases](https://img.shields.io/github/downloads/goranbr/os-debian/total)
 ![GitHub language count](https://img.shields.io/github/languages/count/goranbr/os-debian)
 ![GitHub top language](https://img.shields.io/github/languages/top/goranbr/os-debian)
+![CodeFactor Grade](https://img.shields.io/codefactor/grade/github/goranbr/os-debian/master?label=CodeFactor)
 
 Debian related scripts, cheatsheets and whatnot.
 
