@@ -7,6 +7,8 @@ Debian related scripts, cheatsheets and whatnot.
 - upgrade-debian.sh
 
 ## Renaming files
-- `mx "PATTERN/REPLACE" FILEPATTERN`
+- ``` bash
+mx "PATTERN/REPLACE" FILEPATTERN
+```
 - `ix [-w WIDTH] [-d DELTA] [-s START] -n BASENAME FILEPATTERN`
 
