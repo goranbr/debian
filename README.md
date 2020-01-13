@@ -11,5 +11,5 @@ Debian related scripts, cheatsheets and whatnot.
 
 ### ix
 - ix - rename files with a basename and an index number
-- `ix [-w width] [-d delta] [-s start] -n <basename> <filepattern>`
+- `ix [-w width] [-d delta] [-s start] -n <basename> [filepattern]`
 
