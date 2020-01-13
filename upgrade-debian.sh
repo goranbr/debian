@@ -112,7 +112,7 @@ ask
 
 headline "Puppet Dry-run"
 echo
-if ask "Run: puppet dry-run?"
+if ask "Run: puppet dry-run?"; then
     puppet agent -t --noop
 fi
 echo
@@ -122,7 +122,7 @@ echo
 #-------------------------------------------------------------------------------------------------
 
 headline "Full Puppet run"
-if ask "Run: a full puppet run?"
+if ask "Run: a full puppet run?"; then
     puppet agent -t
 fi
 echo
@@ -198,7 +198,7 @@ sudo apt-get autoremove
 #-------------------------------------------------------------------------------------------------
 
 headline "Full Puppet run"
-if ask "Run a full puppet run?"
+if ask "Run a full puppet run?"; then
     puppet agent -t
 fi
 
@@ -227,7 +227,7 @@ dpkg -l | awk '/^rc/ { print $2 }'
 ask
 
 echo
-if ask "Remove these config files?"
+if ask "Remove these config files?"; then
     apt-get purge $(dpkg -l | awk '/^rc/ { print $2 }')
 fi
 
@@ -244,6 +244,6 @@ systemctl list-unit-files | grep avahi
 
 headline "System reboot"
 echo "IMPORTANT!! After restarting the machine check logs to ensure all services are up and running."
-if ask "Reboot the machine?"
+if ask "Reboot the machine?"; then
     reboot
 fi
