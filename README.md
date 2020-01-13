@@ -3,7 +3,7 @@
 
 Debian related scripts, cheatsheets and whatnot.
 
-## Dist Upgrades
+## Distribution upgrades
 - upgrade-debian.sh
 
 ## Renaming files
