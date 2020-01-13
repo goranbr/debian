@@ -1,5 +1,5 @@
 # os-debian
-https://img.shields.io/github/contributors/goranbr/os-debian
+![GitHub contributors](https://img.shields.io/github/contributors/goranbr/os-debian?color=green)
 Debian related scripts, cheatsheets and whatnot.
 
 ## Distribution upgrades
