@@ -3,6 +3,8 @@
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/goranbr/os-debian?color=green)
 ![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/goranbr/os-debian)
 ![GitHub All Releases](https://img.shields.io/github/downloads/goranbr/os-debian/total)
+![GitHub language count](https://img.shields.io/github/languages/count/goranbr/os-debian)
+![GitHub top language](https://img.shields.io/github/languages/top/goranbr/os-debian)
 
 Debian related scripts, cheatsheets and whatnot.
 
